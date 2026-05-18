@@ -1,0 +1,38 @@
+bugs:
+  - id: BUG-01
+    feature: cart
+    category: validation
+    severity: high
+    title: "Quantity hits zero"
+    steps: ["Add to cart", "Click − on qty 1"]
+    expected: "Item removed"
+    actual: "qty stays at 0"
+
+  - id: BUG-02
+    feature: newsletter
+    category: validation
+    severity: medium
+    title: "Email without TLD accepted"
+    steps: ["Submit user@domain in newsletter"]
+    expected: "Validation error"
+    actual: "Subscribed"
+
+  - id: BUG-04
+    feature: pagination
+    category: navigation
+    severity: high
+    title: "Category lost on pagination"
+    steps: ["/collections?category=tops", "Next"]
+    expected: "category=tops preserved"
+    actual: "category dropped"
+
+  - id: BUG-07
+    feature: search
+    category: functional
+    severity: high
+    title: "Search is case-sensitive"
+    steps: ["Search Coat with uppercase C"]
+    expected: "Finds wool coat"
+    actual: "No results"
+
+  # 3 bugs not reported: bug-03 (outside click), bug-05 (Esc), bug-06 (duplicates)

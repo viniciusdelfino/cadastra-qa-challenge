@@ -1,0 +1,127 @@
+name: Submission
+
+# Validates the submission shape and dispatches the full grader in the
+# private repo. Uses pull_request_target so the workflow file from main is
+# always used, never the candidate's version of the workflow.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate-and-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head (read-only)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          path: submission
+
+      - name: Validate submission files exist
+        id: validate
+        run: |
+          cd submission
+          missing=()
+          for f in TEST_EXECUTION.md bugs.yaml TEST_PLAN.md; do
+            if [ ! -f "$f" ]; then
+              missing+=("$f")
+            fi
+          done
+
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "::error::Missing required files: ${missing[*]}"
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            echo "reason=Missing: ${missing[*]}" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          echo "valid=true" >> "$GITHUB_OUTPUT"
+
+      - name: Validate YAML syntax of bugs.yaml
+        if: steps.validate.outputs.valid == 'true'
+        run: |
+          cd submission
+          python3 -c "
+          import sys, yaml
+          try:
+              with open('bugs.yaml') as fh:
+                  data = yaml.safe_load(fh)
+              bugs = data.get('bugs', []) if isinstance(data, dict) else []
+              print(f'bugs.yaml parsed OK ({len(bugs)} bug(s) reported)')
+          except Exception as e:
+              print(f'::error::bugs.yaml is not valid YAML: {e}')
+              sys.exit(1)
+          "
+
+      - name: Count filled TCs
+        if: steps.validate.outputs.valid == 'true'
+        id: tcs
+        run: |
+          cd submission
+          filled=$(grep -cE '^\|\s*TC-[A-Z]+-[0-9]+\s*\|.*\|\s*(PASS|FAIL|BLOCKED)\s*\|' TEST_EXECUTION.md || true)
+          total=$(grep -cE '^\|\s*TC-[A-Z]+-[0-9]+\s*\|' TEST_EXECUTION.md || true)
+          echo "filled=$filled" >> "$GITHUB_OUTPUT"
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "Filled $filled / $total test cases"
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          VALID: ${{ steps.validate.outputs.valid }}
+          REASON: ${{ steps.validate.outputs.reason }}
+          FILLED: ${{ steps.tcs.outputs.filled }}
+          TOTAL: ${{ steps.tcs.outputs.total }}
+        with:
+          script: |
+            const valid = process.env.VALID === 'true';
+            const body = valid
+              ? `## ✅ Submission validated\n\n` +
+                `- Required files present: TEST_EXECUTION.md, bugs.yaml, TEST_PLAN.md\n` +
+                `- Test cases filled: **${process.env.FILLED} / ${process.env.TOTAL}**\n\n` +
+                `Full grading is running in the recruiter's pipeline. ` +
+                `You will not see the score in this PR — the recruiter will reach out after review.`
+              : `## ❌ Submission has problems\n\n` +
+                `${process.env.REASON || 'Check the workflow logs for details.'}\n\n` +
+                `Please fix and push again to the same branch.`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+      - name: Dispatch grader (private repo)
+        if: steps.validate.outputs.valid == 'true'
+        env:
+          PAT: ${{ secrets.GRADER_DISPATCH_PAT }}
+        run: |
+          if [ -z "$PAT" ]; then
+            echo "::warning::GRADER_DISPATCH_PAT not configured — grader will not run automatically."
+            exit 0
+          fi
+          curl -sS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $PAT" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/Cadastra-Next-Gen-Company/avaliacao-qa/dispatches \
+            -d @- <<EOF
+          {
+            "event_type": "candidate-submission",
+            "client_payload": {
+              "pr_number": ${{ github.event.pull_request.number }},
+              "pr_url": "${{ github.event.pull_request.html_url }}",
+              "submission_repo": "${{ github.event.pull_request.head.repo.full_name }}",
+              "submission_sha": "${{ github.event.pull_request.head.sha }}",
+              "submission_branch": "${{ github.event.pull_request.head.ref }}",
+              "candidate_login": "${{ github.event.pull_request.user.login }}"
+            }
+          }
+          EOF

@@ -1,0 +1,81 @@
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  darkMode: 'class',
+  content: ['./src/**/*.{ts,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        background: '#fbf9f9',
+        primary: '#000000',
+        secondary: '#5d5f5f',
+        tertiary: '#000000',
+        outline: '#7e7576',
+        'outline-variant': '#cfc4c5',
+        'on-primary': '#ffffff',
+        'on-secondary': '#ffffff',
+        'on-background': '#1b1c1c',
+        'on-surface': '#1b1c1c',
+        'on-surface-variant': '#4c4546',
+        surface: '#fbf9f9',
+        'surface-bright': '#fbf9f9',
+        'surface-dim': '#dbdad9',
+        'surface-variant': '#e3e2e2',
+        'surface-container': '#efeded',
+        'surface-container-low': '#f5f3f3',
+        'surface-container-lowest': '#ffffff',
+        'surface-container-high': '#e9e8e7',
+        'surface-container-highest': '#e3e2e2',
+        'primary-container': '#1b1b1b',
+        'secondary-container': '#dfe0e0',
+        'tertiary-container': '#1a1c1c',
+        error: '#ba1a1a',
+        'on-error': '#ffffff',
+        'error-container': '#ffdad6',
+        'on-error-container': '#93000a',
+        'inverse-primary': '#c6c6c6',
+        'inverse-surface': '#303031',
+        'inverse-on-surface': '#f2f0f0',
+      },
+      borderRadius: {
+        DEFAULT: '0.25rem',
+        lg: '0.5rem',
+        xl: '0.75rem',
+        full: '9999px',
+      },
+      spacing: {
+        'section-gap': '120px',
+        'margin-desktop': '80px',
+        'margin-mobile': '20px',
+        'stack-sm': '8px',
+        'stack-md': '16px',
+        'stack-lg': '40px',
+        gutter: '24px',
+      },
+      fontFamily: {
+        display: ['var(--font-display)', 'Bodoni Moda', 'serif'],
+        body: ['var(--font-body)', 'Manrope', 'sans-serif'],
+      },
+      fontSize: {
+        'display-lg': [
+          '80px',
+          { lineHeight: '96px', letterSpacing: '-0.02em', fontWeight: '700' },
+        ],
+        'headline-xl': ['48px', { lineHeight: '56px', fontWeight: '600' }],
+        'headline-xl-mobile': ['32px', { lineHeight: '40px', fontWeight: '600' }],
+        'headline-lg': ['32px', { lineHeight: '40px', fontWeight: '500' }],
+        'headline-md': ['24px', { lineHeight: '32px', fontWeight: '500' }],
+        'body-lg': ['18px', { lineHeight: '28px', fontWeight: '400' }],
+        'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+        'label-caps': [
+          '12px',
+          { lineHeight: '16px', letterSpacing: '0.1em', fontWeight: '600' },
+        ],
+        'label-sm': ['11px', { lineHeight: '14px', fontWeight: '400' }],
+      },
+    },
+  },
+  plugins: [],
+};
+
+export default config;

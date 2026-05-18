@@ -1,0 +1,24 @@
+# Liste os bugs encontrados. Use o formato abaixo para cada bug.
+#
+# - feature: cart | newsletter | filters | pagination | search | subscribers | pdp | header | other
+# - category: validation | persistence | navigation | a11y | ux | perf | security
+# - severity: high | medium | low
+#
+# Pode haver MAIS bugs do que o número esperado pelo gabarito — bugs válidos
+# fora do catálogo entram na avaliação de "lateral thinking" (bônus).
+
+bugs:
+  - id: BUG-01
+    feature: cart
+    category: validation
+    severity: high
+    title: "Exemplo: cart aceita quantidade zero"
+    steps:
+      - "Adicionar produto ao carrinho"
+      - "Abrir drawer"
+      - "Clicar no botão '−' até a quantidade chegar a 0"
+    expected: "Item deveria ser removido do carrinho quando quantidade < 1"
+    actual: "Item permanece visível com quantidade 0"
+    evidence: "screenshot opcional, link, ou nada"
+
+  # Remova o exemplo acima e adicione os seus bugs abaixo.
